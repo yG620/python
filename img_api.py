@@ -13,9 +13,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ID,KEY的配置信息
 INFO_CONFIG = {
-    'ID': '18518657',
-    'API_KEY': 'yOyVhelfULwRlLbSRyMg90rj',
-    'SECRET_KEY': 'EgaRZizDp2koQXoSW3uNWeRxGGnCS9mT'
+    'ID': '15777797',
+    'API_KEY': 'xkQmQk08d7pTP56LqXhqpUbm',
+    'SECRET_KEY': 'bzgSQwTy6WTkXczLlYPfOwu2OQZQ8CEg'
 }
 
 # URL配置
@@ -25,7 +25,7 @@ URL_LIST_URL = {
     'ACCESS_TOKEN_URL': 'https://aip.baidubce.com/oauth/2.0/token?' + 'grant_type=client_credentials&client_id={API_KEYS}&client_secret={SECRET_KEYS}&'.format(
         API_KEYS=INFO_CONFIG['API_KEY'], SECRET_KEYS=INFO_CONFIG['SECRET_KEY']),
     # 车牌识别
-    'LICENSE_PLATE': 'https://aip.baidubce.com/rest/2.0/ocr/v1/license_plate',
+    'LICENSE_PLATE': 'https://aip.baidubce.com/rest/2.0/image-classify/v1/car',
 
 }
 
@@ -58,19 +58,18 @@ class LicensePlate(LicensePlateSuper):
         self.HEADER = {
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        self.IMAGE_CONFIG = {
-            'multi_detect': multi_detect,
-        }
-
         if image is not None:
             imagepath = os.path.exists(image)
             if imagepath == True:
                 images = image
                 with open(images, 'rb') as images:
-                    self.IMAGE_CONFIG['image'] = base64.b64encode(images.read())
-
+                    img = base64.b64encode(images.read())
+            else:
+                return
+        self.IMAGE_CONFIG = {'image': img}
+        self.imagepath = image
     def postLicensePlate(self):
-        if self.IMAGE_CONFIG.get('image', None) == None:
+        if self.imagepath == None:
             return 'image参数不能为空！'
         licensePlate = requests.post(url=LICENSE_PLATE_URL, headers=self.HEADER,
                                      data=self.IMAGE_CONFIG)
@@ -86,10 +85,9 @@ def api_pic(CPH):
     testLicensePlate = LicensePlate(image=CPH)
     testLicensePlatejson = testLicensePlate.postLicensePlate()
 
-    testcolor =jsonpath.jsonpath(testLicensePlatejson, '$..color')
-    testtext =jsonpath.jsonpath(testLicensePlatejson, '$..number')
+    #print('车型号识别：', testLicensePlatejson)
+    print('车型：', testLicensePlatejson['result'][0]['name'])
+    print('颜色：', testLicensePlatejson['color_result'])
 
-    testcolorstr = "".join(testcolor)
-    testtextstr = "".join(testtext)
-    #print('车牌号api识别：', testcolorstr, testtextstr)
-    return testcolorstr, testtextstr
+
+api_pic("1_1.jpg")
